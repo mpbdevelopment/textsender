@@ -41,7 +41,7 @@
         <label for="scheduleTime" class="form-label">Scheduled Time</label>
         <input type="datetime-local" class="form-control" id="scheduleTime">
       </div>
-      <button type="submit" class="btn btn-primary">Send</button>
+      <button type="submit" class="btn btn-primary" id="sendButton">Send</button>
     </form>
 
     <!-- Results -->
@@ -55,7 +55,7 @@
     crossorigin="anonymous"></script>
 
   <script>
-    // Toggle schedule time input based on delivery option
+    // Toggle the schedule time input based on delivery option selection
     document.querySelectorAll('input[name="deliveryOption"]').forEach((elem) => {
       elem.addEventListener("change", function(event) {
         const scheduleDiv = document.getElementById("scheduleTimeDiv");
@@ -63,31 +63,36 @@
       });
     });
 
+    // Handle form submission and display a loading spinner on the send button
     document.getElementById("smsForm").addEventListener("submit", async function(e) {
       e.preventDefault();
 
-      // Get values from form
+      const sendButton = document.getElementById("sendButton");
+      // Disable the button and add a spinner
+      sendButton.disabled = true;
+      sendButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Sending...';
+
+      // Get form values
       const phoneNumbersText = document.getElementById("phoneNumbers").value;
       const messageText = document.getElementById("messageText").value;
       const deliveryOption = document.querySelector('input[name="deliveryOption"]:checked').value;
       const scheduleTime = document.getElementById("scheduleTime").value;
 
-      // Split the phone numbers by new line and filter out empties
+      // Process phone numbers (split and filter out empty lines)
       const phoneNumbers = phoneNumbersText.split('\n').map(num => num.trim()).filter(num => num);
 
-      // Prepare payload
+      // Prepare the payload for the Netlify function
       const payload = {
         phoneNumbers: phoneNumbers,
         message: messageText,
         schedule: (deliveryOption === "schedule"),
-        scheduledTime: scheduleTime // ISO-like string
+        scheduledTime: scheduleTime // ISO-like string from the datetime-local input
       };
 
       // Clear previous results
       document.getElementById("results").innerHTML = "";
 
       try {
-        // Update this URL if necessary when deploying
         const response = await fetch("/.netlify/functions/send", {
           method: "POST",
           headers: {
@@ -97,7 +102,7 @@
         });
         const result = await response.json();
 
-        // Display results for each phone number
+        // Display a result for each phone number
         result.forEach(res => {
           const alertDiv = document.createElement("div");
           alertDiv.classList.add("alert", "mt-2");
@@ -116,6 +121,10 @@
         alertDiv.classList.add("alert", "alert-danger", "mt-2");
         alertDiv.textContent = "An error occurred while sending messages.";
         document.getElementById("results").appendChild(alertDiv);
+      } finally {
+        // Re-enable the send button and restore its text
+        sendButton.disabled = false;
+        sendButton.innerHTML = 'Send';
       }
     });
   </script>
