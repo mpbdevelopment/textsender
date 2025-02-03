@@ -19,7 +19,7 @@ function convertToE164(phoneStr) {
   if (digits.length === 10) {
     return `+1${digits}`;
   }
-  // If already in E.164 format or invalid, return as-is (or you can add further validation)
+  // If already in E.164 format or invalid, return as-is (or add further validation)
   return phoneStr;
 }
 
@@ -63,10 +63,13 @@ exports.handler = async (event, context) => {
         to: toNumber,
       };
 
-      // Add scheduling parameters if requested and provided
+      // If scheduling is requested, convert the scheduled time.
+      // The HTML datetime-local input returns a string like "YYYY-MM-DDTHH:mm"
+      // Here we assume that this time is in Eastern Standard Time (EST, UTC-5).
+      // Append "-05:00" so that JavaScript creates the correct Date.
       if (schedule && scheduledTime) {
-        // Convert the scheduled time to an ISO 8601 string
-        msgParams.sendAt = new Date(scheduledTime).toISOString();
+        const scheduledTimeEST = scheduledTime + "-05:00";
+        msgParams.sendAt = new Date(scheduledTimeEST).toISOString();
         msgParams.scheduleType = 'fixed';
       }
 
@@ -75,7 +78,7 @@ exports.handler = async (event, context) => {
       results.push({
         phone: phone,
         status: "success",
-        message: schedule ? "Message scheduled." : "Message sent."
+        message: schedule ? "Message scheduled (EST)." : "Message sent."
       });
     } catch (error) {
       console.error(`Error sending to ${phone}:`, error);
