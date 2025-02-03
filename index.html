@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Twilio SMS Sender</title>
+  <!-- Bootstrap CSS -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    integrity="sha384-ENjdO4Dr2bkBIFxQpeoG6VYhZ5YhZT4lE6ZrZq0nNq4p2sVb5aN8V1+K0R2v7K6J"
+    crossorigin="anonymous">
+</head>
+<body>
+  <div class="container mt-5">
+    <h1>Twilio SMS Sender</h1>
+    <form id="smsForm">
+      <div class="mb-3">
+        <label for="phoneNumbers" class="form-label">Phone Numbers <small>(one per line, e.g. (123) 456-7890)</small></label>
+        <textarea class="form-control" id="phoneNumbers" rows="5" placeholder="(123) 456-7890"></textarea>
+      </div>
+      <div class="mb-3">
+        <label for="messageText" class="form-label">Message</label>
+        <textarea class="form-control" id="messageText" rows="3" placeholder="Enter your message here"></textarea>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Delivery Option</label>
+        <div>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="deliveryOption" id="sendNow" value="now" checked>
+            <label class="form-check-label" for="sendNow">Send Now</label>
+          </div>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="deliveryOption" id="schedule" value="schedule">
+            <label class="form-check-label" for="schedule">Schedule</label>
+          </div>
+        </div>
+      </div>
+      <div class="mb-3" id="scheduleTimeDiv" style="display: none;">
+        <label for="scheduleTime" class="form-label">Scheduled Time</label>
+        <input type="datetime-local" class="form-control" id="scheduleTime">
+      </div>
+      <button type="submit" class="btn btn-primary">Send</button>
+    </form>
+
+    <!-- Results -->
+    <div id="results" class="mt-4"></div>
+  </div>
+
+  <!-- Bootstrap Bundle JS (includes Popper) -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-qQ1D7hWq+G6Uyd7+6zV+4t7ih9A4z7EQ+8+WFeXyqhR0N61Pv9OR1z6hBlX1zYI/"
+    crossorigin="anonymous"></script>
+
+  <script>
+    // Toggle schedule time input based on delivery option
+    document.querySelectorAll('input[name="deliveryOption"]').forEach((elem) => {
+      elem.addEventListener("change", function(event) {
+        const scheduleDiv = document.getElementById("scheduleTimeDiv");
+        scheduleDiv.style.display = (event.target.value === "schedule") ? "block" : "none";
+      });
+    });
+
+    document.getElementById("smsForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+
+      // Get values from form
+      const phoneNumbersText = document.getElementById("phoneNumbers").value;
+      const messageText = document.getElementById("messageText").value;
+      const deliveryOption = document.querySelector('input[name="deliveryOption"]:checked').value;
+      const scheduleTime = document.getElementById("scheduleTime").value;
+
+      // Split the phone numbers by new line and filter out empties
+      const phoneNumbers = phoneNumbersText.split('\n').map(num => num.trim()).filter(num => num);
+
+      // Prepare payload
+      const payload = {
+        phoneNumbers: phoneNumbers,
+        message: messageText,
+        schedule: (deliveryOption === "schedule"),
+        scheduledTime: scheduleTime // ISO-like string
+      };
+
+      // Clear previous results
+      document.getElementById("results").innerHTML = "";
+
+      try {
+        // Call the Netlify function endpoint.
+        // When deployed, this URL will be relative to your site's domain.
+        const response = await fetch("/.netlify/functions/send", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+
+        // Display results for each phone number
+        result.forEach(res => {
+          const alertDiv = document.createElement("div");
+          alertDiv.classList.add("alert", "mt-2");
+          if (res.status === "success") {
+            alertDiv.classList.add("alert-success");
+            alertDiv.textContent = `Message for ${res.phone}: ${res.message}`;
+          } else {
+            alertDiv.classList.add("alert-danger");
+            alertDiv.textContent = `Error for ${res.phone}: ${res.message}`;
+          }
+          document.getElementById("results").appendChild(alertDiv);
+        });
+      } catch (error) {
+        console.error("Error sending messages:", error);
+        const alertDiv = document.createElement("div");
+        alertDiv.classList.add("alert", "alert-danger", "mt-2");
+        alertDiv.textContent = "An error occurred while sending messages.";
+        document.getElementById("results").appendChild(alertDiv);
+      }
+    });
+  </script>
+</body>
+</html>
