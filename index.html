@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <title>Twilio SMS Sender</title>
-  <!-- Bootstrap CSS -->
+  <!-- Bootstrap CSS with corrected integrity hash -->
   <link
     href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
     rel="stylesheet"
-    integrity="sha384-ENjdO4Dr2bkBIFxQpeoG6VYhZ5YhZT4lE6ZrZq0nNq4p2sVb5aN8V1+K0R2v7K6J"
+    integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM"
     crossorigin="anonymous">
 </head>
 <body>
@@ -15,7 +15,9 @@
     <h1>Twilio SMS Sender</h1>
     <form id="smsForm">
       <div class="mb-3">
-        <label for="phoneNumbers" class="form-label">Phone Numbers <small>(one per line, e.g. (123) 456-7890)</small></label>
+        <label for="phoneNumbers" class="form-label">
+          Phone Numbers <small>(one per line, e.g. (123) 456-7890)</small>
+        </label>
         <textarea class="form-control" id="phoneNumbers" rows="5" placeholder="(123) 456-7890"></textarea>
       </div>
       <div class="mb-3">
@@ -46,10 +48,10 @@
     <div id="results" class="mt-4"></div>
   </div>
 
-  <!-- Bootstrap Bundle JS (includes Popper) -->
+  <!-- Bootstrap Bundle JS with corrected integrity hash -->
   <script
     src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
-    integrity="sha384-qQ1D7hWq+G6Uyd7+6zV+4t7ih9A4z7EQ+8+WFeXyqhR0N61Pv9OR1z6hBlX1zYI/"
+    integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz"
     crossorigin="anonymous"></script>
 
   <script>
@@ -85,8 +87,7 @@
       document.getElementById("results").innerHTML = "";
 
       try {
-        // Call the Netlify function endpoint.
-        // When deployed, this URL will be relative to your site's domain.
+        // Update this URL if necessary when deploying
         const response = await fetch("/.netlify/functions/send", {
           method: "POST",
           headers: {
