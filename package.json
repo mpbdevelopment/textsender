@@ -1,0 +1,7 @@
+{
+  "name": "twilio-netlify-sms",
+  "version": "1.0.0",
+  "dependencies": {
+    "twilio": "^4.0.0"
+  }
+}
